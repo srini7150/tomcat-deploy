@@ -20,7 +20,7 @@ pipeline {
         }
         stage ('deploy') {
             steps {
-                deploy adapters: [tomcat8(path: '', url: 'http://13.127.157.240:8080/')], contextPath: null, war: '*/*.war'
+                deploy adapters: [tomcat8(credentialsId: 'tomcat-deploy-user', path: '', url: 'http://13.127.157.240:8080/')], contextPath: null, war: '*/*.war'
             }
         }
         // stage ("build & SonarQube analysis") {
