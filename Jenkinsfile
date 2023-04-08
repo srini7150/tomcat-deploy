@@ -14,10 +14,14 @@ pipeline {
         //         sh 'java --version'
         //     }
         stage ('build') {
-            sh 'mvn clean package'
+            steps {
+                sh 'mvn clean package'
+            }
         }
         stage ('deploy') {
-            deploy adapters: [tomcat8(path: '', url: 'http://13.127.157.240:8080/')], contextPath: null, war: './target/*.war'
+            steps {
+                deploy adapters: [tomcat8(path: '', url: 'http://13.127.157.240:8080/')], contextPath: null, war: './target/*.war'
+            }
         }
         // stage ("build & SonarQube analysis") {
         //     steps {
