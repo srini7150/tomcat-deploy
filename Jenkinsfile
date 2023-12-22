@@ -3,61 +3,36 @@ pipeline {
     tools {
         maven '3.9.1'
     }
-    // environment {     
-    //     DOCKERHUB_CREDENTIALS = credentials('docker-hub')
-    // }
+    environment {     
+        SONARQUBE_URL = "https://plain-peas-wash.loca.lt/"
+        SONARQUBE_CREDS = credentials('SONARQUBE_CREDS')
+    }
     stages {
-        // stage ('environment test') {
-        //     steps {
-        //         sh 'docker version'
-        //         sh 'mvn --version'
-        //         sh 'java --version'
-        //     }
         stage ('build') {
             steps {
                 sh 'mvn clean package'
             }
         }
-        stage ('deploy') {
+
+        stage ("sonar") {
             steps {
-                deploy adapters: [tomcat8(credentialsId: 'tomcat-deploy-user', path: '', url: 'http://13.127.157.240:8080/')], contextPath: null, war: '*/*.war'
+                script {
+                    sh """
+                    sonar-scanner -Dsonar.branch.name=${BRANCH_NAME} \
+                    -Dsonar.host.url=${SONARQUBE_URL} \
+                    -Dsonar.login=${SONARQUBE_CREDS_USR} \
+                    -Dsonar.password=${SONARQUBE_CREDS_PSW} \
+                    -Dsonar.projectVersion="1.0.0" """
+                }
+
             }
         }
-        // stage ("build & SonarQube analysis") {
-        //     steps {
-        //         withSonarQubeEnv('sonarqube') {
-        //             sh 'mvn clean package sonar:sonar'
-        //         }
-        //     }
-        // }
-        // stage("Quality Gate") {
-        //     steps {
-        //         timeout(time: 2, unit: 'MINUTES') {
-        //             waitForQualityGate abortPipeline: true
-        //         }
-        //     }
-        // }
-        // stage ('docker login') {
-        //     steps {
-        //         sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-        //     }
-        // }
-        // stage ('building & tagging docker image') {
-        //     steps {
-        //         sh 'docker build -t srinu7150/webapp:$BUILD_NUMBER .'
-        //         sh 'docker tag srinu7150/webapp:$BUILD_NUMBER srinu7150/webapp:latest'
-        //     }
-        // }
-        // stage ('pushing to docker hub') {
-        //     steps {
-        //         sh 'docker push srinu7150/webapp:$BUILD_NUMBER'
-        //         sh 'docker push srinu7150/webapp:latest'
-        //     }
-        // }
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
     }
-    // post{
-    //     always {  
-    //         sh 'docker logout'
-    //     }
-    // }
 }
